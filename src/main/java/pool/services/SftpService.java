@@ -41,16 +41,20 @@ public class SftpService {
             SftpSessionPool sessionPool = SftpConnectionPoolFactory.getInstance().getSessionPool(config.getHost(), 22, config.getUsername(), config.getMaxSessions(), config.getMaxChannels());
             //Simulate each sftp profile is being used by multiple threads for file process
             for (int i = 0; i < max_concurrent_opening_files; i++) {
+                startProcess(testPath, config, sessionPool);
 
-                // log.info("Main thread TraceId:{} ", TraceIdUtil.getTraceId());
-                SftpFileProcessThread thread = new SftpFileProcessThread(sessionPool, config.getHost(), config.getPort(), config.getUsername(), config.getPassword(), testPath, 0);
-                // 使用TtlRunnable确保子线程可以获取到父线程的TraceId
-                Runnable ttlRunnable = TtlRunnable.get(thread);
-                new Thread(ttlRunnable).start();
             }
         }
 
 
+    }
 
+    @LogTraceId
+    public void startProcess(String testPath, SftpConfig config, SftpSessionPool sessionPool) {
+        log.info("Start process");
+        SftpFileProcessThread thread = new SftpFileProcessThread(sessionPool, config.getHost(), config.getPort(), config.getUsername(), config.getPassword(), testPath, 0);
+        // 使用TtlRunnable确保子线程可以获取到父线程的TraceId
+        Runnable ttlRunnable = TtlRunnable.get(thread);
+        new Thread(ttlRunnable).start();
     }
 }
